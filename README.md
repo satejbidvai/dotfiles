@@ -10,7 +10,20 @@ My macOS configuration files.
 
 ### Hammerspoon
 
-- **Zoom:** Closes the "Zoom Workplace" home window when you join a meeting from a link.
+`init.lua` only loads modules. Each automation is one file in `hammerspoon/modules/`.
+
+| Module | What it does |
+|---|---|
+| `reload.lua` | Reloads the config when a `.lua` file changes. |
+| `zoom.lua` | Closes the "Zoom Workplace" home window when you join a meeting from a link. |
+
+To add an automation:
+
+1. Create `hammerspoon/modules/<name>.lua`. It must return a table `M` with a `start()` function.
+2. Keep all watchers, timers and hotkeys on `M` (for example `M.watcher = ...`). If you keep them only in local variables, Lua can garbage-collect them and they stop working.
+3. Add `require("modules.<name>").start()` to `init.lua`.
+
+To turn off an automation, comment out its line in `init.lua`.
 
 ## Set up a new Mac
 
@@ -27,4 +40,4 @@ My macOS configuration files.
    ```
 
 3. Give Hammerspoon Accessibility permission (System Settings → Privacy & Security → Accessibility).
-4. In the Hammerspoon menu, click **Reload Config**.
+4. In the Hammerspoon menu, click **Reload Config**. After this, the config reloads automatically when you save a `.lua` file.
