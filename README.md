@@ -16,6 +16,8 @@ My macOS configuration files.
 |---|---|
 | `reload.lua` | Reloads the config when a `.lua` file changes. |
 | `zoom.lua` | Closes the "Zoom Workplace" home window when you join a meeting from a link. |
+| `no_music.lua` | Quits Apple Music immediately each time it starts. This stops the Play key or headphone buttons from opening Music when no media app is open. |
+| `latch.lua` | Toggles play/pause when an iPhone Shortcut sends `POST /playpause` on port 52824. The token is in the Keychain (service `latch`). Use only on trusted networks. |
 
 To add an automation:
 

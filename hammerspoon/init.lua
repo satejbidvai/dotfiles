@@ -3,3 +3,5 @@
 
 require("modules.reload").start()
 require("modules.zoom").start()
+require("modules.no_music").start()
+require("modules.latch").start()
