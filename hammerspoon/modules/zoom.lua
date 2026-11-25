@@ -5,9 +5,10 @@ local M = {}
 local ZOOM_NAME = "Zoom"
 local ZOOM_BUNDLE = "us.zoom.xos"
 local HOME_TITLE = "Zoom Workplace"
-local LAUNCH_GRACE = 30 -- seconds after launch in which the home window is always closed
+local LAUNCH_GRACE = 10 -- seconds after launch in which the home window is always closed
 
 local zoomLaunchedAt = 0
+local homeClosed = false
 
 local function isHomeWindow(win)
   return win and win:title() == HOME_TITLE
@@ -23,7 +24,36 @@ local function inMeeting(app)
 end
 
 local function closeHome(win)
-  if win and win:isVisible() and isHomeWindow(win) then win:close() end
+  if win and win:isVisible() and isHomeWindow(win) and win:close() then
+    homeClosed = true
+  end
+end
+
+local function visibleHome(app)
+  for _, win in ipairs(app:allWindows()) do
+    if win:isVisible() and isHomeWindow(win) then return win end
+  end
+end
+
+-- hs.window.filter can miss the windows of an app that just launched,
+-- and the home window cannot close while it loads. Look for it every second.
+-- Stop when it stays closed for 1 second, so that you can open it again.
+local function watchLaunch(app)
+  if M.launchTimer then M.launchTimer:stop() end
+  homeClosed = false
+  M.launchTimer = hs.timer.doEvery(1, function()
+    if os.time() - zoomLaunchedAt > LAUNCH_GRACE or not app:isRunning() then
+      M.launchTimer:stop()
+      return
+    end
+    local home = visibleHome(app)
+    if home then
+      closeHome(home)
+    elseif homeClosed then
+      zoomLaunchedAt = 0
+      M.launchTimer:stop()
+    end
+  end)
 end
 
 local function onHomeWindow(win)
@@ -46,8 +76,11 @@ function M.start()
   }, onHomeWindow)
 
   M.appWatcher = hs.application.watcher.new(function(_, event, app)
-    if event == hs.application.watcher.launching and app and app:bundleID() == ZOOM_BUNDLE then
+    if not (app and app:bundleID() == ZOOM_BUNDLE) then return end
+    if event == hs.application.watcher.launching then
       zoomLaunchedAt = os.time()
+    elseif event == hs.application.watcher.launched then
+      watchLaunch(app)
     end
   end)
   M.appWatcher:start()
